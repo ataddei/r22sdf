@@ -85,32 +85,19 @@ def stage(i_data,reset,clock,o_data,N=1):
 
             
 
-def test(clock,reset,a,d):
-    ## print "BF outputs"
-    ## print "clock,reset,a,d"
-    ## clock = Signal(bool(0))
-    ## d=Signal(complex(1,0))
-    ## a=Signal(complex(1,0))
-    ## reset=ResetSignal(1,1,False)
-    u_stage = stage(a,reset,clock,d,N=1)
-    ## @always(delay(1))
-    ## def clkgen():
-    ##     clock.next = not clock
-    @instance
-    def stimulus():
-        for i in range(9):
-            if clock:
-                reset.next = True                
-            yield delay(1)
-        reset.next=False
-        yield delay(2)
-        while True:
-            if clock:
-                print "_[]_"
-            else:
-                print clock,reset,a,d
-            yield delay(2)
-    return instances()
+## def test(clock,reset,a,d,reset_cycles=9):
+##     u_stage = stage(a,reset,clock,d,N=1)
+##     @instance
+##     def stimulus():
+##         for i in range(reset_cycles):
+##             if clock:
+##                 reset.next = True                
+##             yield delay(1)
+##         reset.next=False
+##         yield delay(2)
+##         while True:
+##             yield delay(2)
+##     return instances()
 
 #t=traceSignals(test)
 

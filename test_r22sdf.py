@@ -18,13 +18,30 @@ class TestButterfly0(unittest.TestCase):
 
     
     def test(self):
-        """Verifica la funcionalidad de una butterfly r2^2 serial como una FFT4"""
-        t=test(clock,reset,a,d)
-        sim=Simulation(t,clkgen)
-        for i in range(30):
+        """Verifies butterfly r2^2 functional behavior as a serial FFT N=4"""
+        self.N=4
+        self.latency=self.N-1
+        u_stage = stage(a,reset,clock,d,N=1)
+        @instance
+        def stimulus():
+            for i in range(4):
+                if clock:
+                    reset.next = True                
+                yield delay(1)
+            reset.next=False
+            yield delay(2)
+            while True:
+                yield delay(2)
+        
+        sim=Simulation(u_stage,clkgen,stimulus)
+        
+        sim.run(2)
+        print "\nj,clock,reset,input,output"
+        for j in range(30):
             sim.run(1,quiet=1)
-            print i,clock,reset,a,d
- 
+            print j,clock,reset,a,d
+
+
 if __name__ == '__main__':
-    unittest.main() # llamarlo de la linea de comandos ejecuta todas las pruebas
-    
+    unittest.main()
+
