@@ -65,11 +65,20 @@ class TestDefault(unittest.TestCase):
         self.check()
     def check(self):
         '''Checks sorted values'''
-        self.assertListEqual(list(sort(fft.fft(self.inputs[0:self.N]))),list(sort(self.collect[self.latency-1:self.latency-1+self.N])))
+        self.fft_reference = list(sort_complex(fft.fft(self.inputs[0:self.N])))
+        self.fft_test      = list(sort_complex(self.collect[self.latency-1:self.latency-1+self.N]))
+        self.fft_reference_r = [i.round(8) for i in self.fft_reference]
+        self.fft_test_r      = [i.round(8) for i in self.fft_test]
+        self.assertListEqual(self.fft_reference_r,self.fft_test_r)
 
 class TestDefaultRandomReal(TestDefault):
     def input_generator(self):
-        self.inputs=[complex(random(),0) for i in range(self.N)]*2
+        self.inputs=[complex128(complex(random(),0.0)).round(8) for i in range(self.N)]*2
+        for i in self.inputs:
+            yield i
+class TestDefaultRandom(TestDefault):
+    def input_generator(self):
+        self.inputs=[complex128(complex(round(random()-0.5,5),round(random()-0.5,5))).round(8) for i in range(self.N)]*2
         for i in self.inputs:
             yield i
 
@@ -80,7 +89,7 @@ class TestDefaultZero(TestDefault):
             yield i
 class TestDefaultImpulse0(TestDefault):
     def input_generator(self):
-        self.inputs=[complex(random(),random()) if i==0 else complex(0,0) for i in range(self.N)]*2
+        self.inputs=[(complex(random(),random())) if i==0 else complex(0,0) for i in range(self.N)]*2
         for i in self.inputs:
             yield i
 class TestDefaultImpulse1(TestDefault):
