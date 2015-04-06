@@ -15,7 +15,7 @@ class TestDefault(unittest.TestCase):
         self.d=Signal(complex(0,0))
         self.reset=ResetSignal(1,1,False)
         self.clock = Signal(bool(0))
-        self.uut = stage(self.a,self.reset,self.clock,self.d,N=1)
+        self.uut = r22sdf_top(self.a,self.reset,self.clock,self.d,N=1)
         self.gg=self.input_generator()
     def tearDown(self):
         self.N       =[]
