@@ -4,6 +4,7 @@ from numpy import *
 from r22sdf import *
 import unittest
 from random import *
+import pdb
 
 class TestDefault(unittest.TestCase):
 
@@ -60,7 +61,7 @@ class TestDefault(unittest.TestCase):
         
                 
         sim=Simulation(self.uut,clkgen,stimulus,stim,strobe)
-        for j in range(20):
+        for j in range(8*self.N):
             sim.run(1,quiet=1)
         self.check()
     def check(self):
@@ -108,6 +109,83 @@ class TestDefaultImpulse3(TestDefault):
         for i in self.inputs:
             yield i
 
+class TestDefaultFFT (TestDefault):
+    def setUp(self):
+        self.N=16
+        self.latency=self.N-1
+        self.collect=[]
+        self.a=Signal(complex(0,0))
+        self.d=Signal(complex(0,0))
+        self.reset=ResetSignal(1,1,False)
+        self.clock = Signal(bool(0))
+        self.uut = r22sdf_top(self.a,self.reset,self.clock,self.d,N=2)
+        self.gg=self.input_generator()
+    def tearDown(self):
+        self.N       =[]
+        self.latency =[]
+        self.collect =[]
+        self.a       =[]
+        self.d       =[]
+        self.reset   =[]
+        self.clock   =[]
+        self.uut     =[]
+        self.gg      =[]
+    def input_generator(self):
+        self.inputs=[complex(1,0) for i in range(self.N)]*2
+        for i in self.inputs:
+            yield i
+
+
+class TestDefaultFFTZero(TestDefaultFFT):
+    def input_generator(self):
+        self.inputs=[complex(0,0) for i in range(self.N)]*2
+        for i in self.inputs:
+            yield i
+class TestDefaultFFTImpulse0(TestDefaultFFT):
+    def input_generator(self):
+        self.inputs=[(complex(random(),random())) if i==0 else complex(0,0) for i in range(self.N)]*2
+        for i in self.inputs:
+            yield i
+
+class TestDefaultFFTImpulse1(TestDefaultFFT):
+    def input_generator(self):
+        self.inputs=[complex(random(),random()) if i==1 else complex(0,0) for i in range(self.N)]*2
+        for i in self.inputs:
+            yield i
+class TestDefaultFFTImpulse2(TestDefaultFFT):
+    def input_generator(self):
+        self.inputs=[complex(1,0) if i==2 else complex(0,0) for i in range(self.N)]*2
+        for i in self.inputs:
+            yield i
+class TestDefaultFFTImpulse3(TestDefaultFFT):
+    def input_generator(self):
+        self.inputs=[complex(random(),0) if i==3 else complex(0,0) for i in range(self.N)]*2
+        for i in self.inputs:
+            yield i
+class TestDefaultFFTImpulse3(TestDefaultFFT):
+    def input_generator(self):
+        self.inputs=[complex(random(),0) if i==3 else complex(0,0) for i in range(self.N)]*2
+        for i in self.inputs:
+            yield i
+class TestDefaultFFTImpulseRandom(TestDefaultFFT):
+    def input_generator(self):
+        imp=randint(0,self.N-1)
+        print imp
+        self.inputs=[complex(random(),0) if i==imp else complex(0,0) for i in range(self.N)]*2
+        for i in self.inputs:
+            yield i
+             
+# creating a new test suite
+FFT16Suite = unittest.TestSuite()
+ 
+# adding a test case
+FFT16Suite.addTest(unittest.makeSuite(TestDefaultFFT))
+FFT16Suite.addTest(unittest.makeSuite(TestDefaultFFTImpulse0))
+FFT16Suite.addTest(unittest.makeSuite(TestDefaultFFTImpulse1))
+FFT16Suite.addTest(unittest.makeSuite(TestDefaultFFTImpulse2))
+FFT16Suite.addTest(unittest.makeSuite(TestDefaultFFTImpulse3))
+FFT16Suite.addTest(unittest.makeSuite(TestDefaultFFTImpulseRandom))
+FFT16Suite.addTest(unittest.makeSuite(TestDefaultFFTZero))
 if __name__ == '__main__':
     unittest.main()
 

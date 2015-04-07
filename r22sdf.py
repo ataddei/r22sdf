@@ -53,19 +53,20 @@ def Butterfly22 (i_control_t,i_control_s,i_data_aa,i_data_bb,o_data_aa,o_data_bb
     return instances()
 
 
-def stage(i_data,reset,clock,o_data,counter_pin,index,N=1):
-    fifo1=[Signal(complex(0,0)) for ii in range(N*2)]
-    fifo2=[Signal(complex(0,0)) for ii in range(N)]
+def stage(i_data,reset,clock,o_data,counter_pin,index,N=1,FFT=16):
+    fifo1=[Signal(complex(0,0)) for ii in range(N*(2**N))]
+    fifo2=[Signal(complex(0,0)) for ii in range(N*(2**(N-1)))]
     a=Signal(complex(0,0))
     b=Signal(complex(0,0))
     c=Signal(complex(0,0))
     d=Signal(complex(0,0))
     counter_s=Signal(False)
     counter_t=Signal(False)
+    counter_tw=Signal(modbv(0,0,FFT))
     @always_comb
     def control_muxes():
-        counter_s.next=counter_pin(1)
-        counter_t.next=counter_pin(0)
+        counter_s.next=counter_pin(2*(N-1)+1)
+        counter_t.next=counter_pin(2*(N-1))
         
     u_bf21=Butterfly21(counter_s,fifo1[len(fifo1)-1],i_data,a,b)
     u_bf22=Butterfly22(counter_s,counter_t,fifo2[len(fifo2)-1],b,c,d)
@@ -73,6 +74,7 @@ def stage(i_data,reset,clock,o_data,counter_pin,index,N=1):
     def fifos():
          if reset==False:
             #print b,o_data,control_t,control_s
+            counter_tw.next=counter_pin+13
             for i in range(len(fifo1)):
                 fifo1[i].next = a if i==0 else fifo1[i-1]
         
@@ -82,17 +84,20 @@ def stage(i_data,reset,clock,o_data,counter_pin,index,N=1):
     @always_comb
     def out_twiddle():
         
-        o_data.next=d*e**complex(0,index[0])
-        
+        if (N!=1):
+            o_data.next=d*(e**complex(0,2*pi*index[counter_tw]/(1.0*FFT)))
+        else:
+            o_data.next=d
     return instances()
 
 
 def r22sdf_top(i_data,reset,clock,o_data,N=1):
+    FFT=2**(2*N)
     counter=Signal(modbv(0,0,2**(N*2)))
     stage_data_in_wire=[Signal(complex(0,0)) for ii in range(N)]
     stage_data_out_wire=[Signal(complex(0,0)) for ii in range(N)]
     butterflies=[None for i in range(N)]
-    index=twiddle_calc(2**2*N)
+    index=twiddle_calc(2**(2*N))
     
     @always(clock.posedge,reset)
     def counter_seq():
@@ -100,7 +105,7 @@ def r22sdf_top(i_data,reset,clock,o_data,N=1):
             counter.next=0
         else:
             counter.next=counter+1
-            
+            #print counter,stage_data_in_wire[0],stage_data_out_wire[0]
     for i in range(N):
         if i==0:
             stage_data_in_wire[i]=i_data
@@ -108,9 +113,8 @@ def r22sdf_top(i_data,reset,clock,o_data,N=1):
             stage_data_in_wire[i]=stage_data_out_wire[i-1]
         if i==(N-1):
             stage_data_out_wire[i]=o_data
-        if i==(N-1):
-            butterflies[i]=stage(stage_data_in_wire[i],reset,clock,stage_data_out_wire[i],counter,[0]*(2**2*N),N)
-        else:butterflies[i]=stage(stage_data_in_wire[i],reset,clock,stage_data_out_wire[i],counter,index[i],N)
+            butterflies[i]=stage(stage_data_in_wire[i],reset,clock,stage_data_out_wire[i],counter,[0]*FFT,1,FFT)
+        else:butterflies[i]=stage(stage_data_in_wire[i],reset,clock,stage_data_out_wire[i],counter,index[i],N-i,FFT)
         
     return instances()
         
@@ -132,6 +136,6 @@ def twiddle_calc(N=16):
         else:
             t.append(p)
     
-    return t if k else [0]*4
+    return t if k else [0]*N
 
 p=twiddle_calc(16)
