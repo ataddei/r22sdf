@@ -66,6 +66,7 @@ class TestDefault(unittest.TestCase):
         self.check()
     def check(self):
         '''Checks sorted values'''
+        
         self.fft_reference = list(sort_complex(fft.fft(self.inputs[0:self.N])))
         self.fft_test      = list(sort_complex(self.collect[self.latency-1:self.latency-1+self.N]))
         self.fft_reference_r = [i.round(8) for i in self.fft_reference]
@@ -169,12 +170,24 @@ class TestDefaultFFTImpulse3(TestDefaultFFT):
             yield i
 class TestDefaultFFTImpulseRandom(TestDefaultFFT):
     def input_generator(self):
-        imp=randint(0,self.N-1)
+        imp=[randint(0,self.N-1), randint(0,self.N-1) ]
+        imp=[1,4]
         print imp
-        self.inputs=[complex(random(),0) if i==imp else complex(0,0) for i in range(self.N)]*2
+        self.inputs=[complex(1,0) if i in imp else complex(0,0) for i in range(self.N)]*2
         for i in self.inputs:
             yield i
-             
+class TestDefaultFFTRandom(TestDefaultFFT):
+    def input_generator(self):
+        self.inputs=[complex128(complex(round(random()-0.5,5),round(random()-0.5,5))).round(8) for i in range(self.N)]*2
+        for i in self.inputs:
+            yield i
+
+class TestDefaultFFTSaw(TestDefaultFFT):
+    def input_generator(self):
+        self.inputs=[complex128(complex(i,i)).round(8) for i in range(self.N)]*2
+        for i in self.inputs:
+            yield i
+
 # creating a new test suite
 FFT16Suite = unittest.TestSuite()
  
@@ -185,6 +198,7 @@ FFT16Suite.addTest(unittest.makeSuite(TestDefaultFFTImpulse1))
 FFT16Suite.addTest(unittest.makeSuite(TestDefaultFFTImpulse2))
 FFT16Suite.addTest(unittest.makeSuite(TestDefaultFFTImpulse3))
 FFT16Suite.addTest(unittest.makeSuite(TestDefaultFFTImpulseRandom))
+FFT16Suite.addTest(unittest.makeSuite(TestDefaultFFTRandom))
 FFT16Suite.addTest(unittest.makeSuite(TestDefaultFFTZero))
 if __name__ == '__main__':
     unittest.main()
