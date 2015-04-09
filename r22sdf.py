@@ -5,8 +5,8 @@ from  numpy import *
 def Butterfly (i_data_a,i_data_b,o_data_a,o_data_b):
     @always_comb
     def bf():
-        o_data_a=i_data_a+i_data_b
-        o_data_b=i_data_a-i_data_b
+        o_data_a.next=i_data_a+i_data_b
+        o_data_b.next=i_data_a-i_data_b
     return bf
 
 def Butterfly21 (i_control_s,i_data_aa,i_data_bb,o_data_aa,o_data_bb):
@@ -14,17 +14,13 @@ def Butterfly21 (i_control_s,i_data_aa,i_data_bb,o_data_aa,o_data_bb):
     selfd=Signal(complex(0,0))
     u_bf=Butterfly(i_data_aa,i_data_bb,selfc,selfd)       
     @always_comb
-    def bf21():
-        
-        if i_control_s:
-        
-            o_data_aa=selfd
-            o_data_bb=selfc
-            
+    def bf21():        
+        if i_control_s:        
+            o_data_aa.next=selfd
+            o_data_bb.next=selfc
         else:
-            o_data_aa=i_data_bb
-            o_data_bb=i_data_aa
-            
+            o_data_aa.next=i_data_bb
+            o_data_bb.next=i_data_aa
     return instances()
 
 def Butterfly22 (i_control_t,i_control_s,i_data_aa,i_data_bb,o_data_aa,o_data_bb):
@@ -32,24 +28,22 @@ def Butterfly22 (i_control_t,i_control_s,i_data_aa,i_data_bb,o_data_aa,o_data_bb
     selfb=Signal(complex(0,0))
     selfc=Signal(complex(0,0))
     selfd=Signal(complex(0,0))
-    
     u_bf=Butterfly(selfa,selfb,selfc,selfd)       
     @always_comb
     def bf22():
         if i_control_s==False:
-            selfa=i_data_aa
-            selfb=i_data_bb
-            o_data_aa=i_data_bb
-            o_data_bb=i_data_aa
+            selfa.next=i_data_aa
+            selfb.next=i_data_bb
+            o_data_aa.next=i_data_bb
+            o_data_bb.next=i_data_aa
         else:
-            selfa=i_data_aa
+            selfa.next=i_data_aa
             if i_control_t:
-                selfb=i_data_bb
+                selfb.next=i_data_bb
             else:
-                selfb=i_data_bb*complex(0,-1)
-            o_data_aa=selfd
-            o_data_bb=selfc
-       
+                selfb.next=i_data_bb*complex(0,-1)
+            o_data_aa.next=selfd
+            o_data_bb.next=selfc
     return instances()
 
 
@@ -62,11 +56,11 @@ def stage(i_data,reset,clock,o_data,counter_pin,index,N=1,FFT=16):
     d=Signal(complex(0,0))
     counter_s=Signal(False)
     counter_t=Signal(False)
-    counter_tw=Signal(modbv(0,0,FFT-1))
+    #counter_tw=Signal(modbv(0,0,FFT))
     @always_comb
     def control_muxes():
-        counter_s=counter_pin(2*(N-1)+1)
-        counter_t=counter_pin(2*(N-1))
+        counter_s.next=counter_pin(2*(N-1)+1)
+        counter_t.next=counter_pin(2*(N-1))
        
     u_bf22=Butterfly22(counter_s,counter_t,fifo2[len(fifo2)-1],b,c,d)
     u_bf21=Butterfly21(counter_s,fifo1[len(fifo1)-1],i_data,a,b)
@@ -85,15 +79,17 @@ def stage(i_data,reset,clock,o_data,counter_pin,index,N=1,FFT=16):
     @always_comb
     def out_twiddle():
         
+        counter_tw=mod(counter_pin+4,FFT)
         if (N!=1):
-            o_data=d*conj(e**(complex(0,-2*pi*index[counter_tw]/(1.0*FFT))))
-            #print counter_pin,counter_s,counter_t,i_data,b,d,o_data,index[counter_tw],'counter_tw: ',counter_tw
+            o_data.next=d*conj(e**(complex(0,-2*pi*index[counter_tw]/(1.0*FFT))))
+
         else:
-            o_data=d
-    @always_comb
-    def count_twiddle():
-        counter_tw=counter_pin
-    
+            o_data.next=d
+    @always (clock.negedge)
+    def print_values():
+        if (N!=1):
+            counter_tw=mod(counter_pin+4,FFT)
+            print N,counter_pin,counter_s,counter_t,i_data,b,d,index[counter_tw],'counter_tw: ',counter_tw
     return instances()
 
 
