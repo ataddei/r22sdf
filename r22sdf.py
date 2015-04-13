@@ -14,17 +14,13 @@ def Butterfly21 (i_control_s,i_data_aa,i_data_bb,o_data_aa,o_data_bb):
     selfd=Signal(complex(0,0))
     u_bf=Butterfly(i_data_aa,i_data_bb,selfc,selfd)       
     @always_comb
-    def bf21():
-        
-        if i_control_s:
-        
+    def bf21():        
+        if i_control_s:        
             o_data_aa.next=selfd
             o_data_bb.next=selfc
-            
         else:
             o_data_aa.next=i_data_bb
             o_data_bb.next=i_data_aa
-            
     return instances()
 
 def Butterfly22 (i_control_t,i_control_s,i_data_aa,i_data_bb,o_data_aa,o_data_bb):
@@ -32,7 +28,6 @@ def Butterfly22 (i_control_t,i_control_s,i_data_aa,i_data_bb,o_data_aa,o_data_bb
     selfb=Signal(complex(0,0))
     selfc=Signal(complex(0,0))
     selfd=Signal(complex(0,0))
-    
     u_bf=Butterfly(selfa,selfb,selfc,selfd)       
     @always_comb
     def bf22():
@@ -49,7 +44,6 @@ def Butterfly22 (i_control_t,i_control_s,i_data_aa,i_data_bb,o_data_aa,o_data_bb
                 selfb.next=i_data_bb*complex(0,-1)
             o_data_aa.next=selfd
             o_data_bb.next=selfc
-       
     return instances()
 
 
@@ -62,32 +56,40 @@ def stage(i_data,reset,clock,o_data,counter_pin,index,N=1,FFT=16):
     d=Signal(complex(0,0))
     counter_s=Signal(False)
     counter_t=Signal(False)
-    counter_tw=Signal(modbv(0,0,FFT))
+    #counter_tw=Signal(modbv(0,0,FFT))
     @always_comb
     def control_muxes():
         counter_s.next=counter_pin(2*(N-1)+1)
         counter_t.next=counter_pin(2*(N-1))
-        
-    u_bf21=Butterfly21(counter_s,fifo1[len(fifo1)-1],i_data,a,b)
+       
     u_bf22=Butterfly22(counter_s,counter_t,fifo2[len(fifo2)-1],b,c,d)
+    u_bf21=Butterfly21(counter_s,fifo1[len(fifo1)-1],i_data,a,b)
+    
     @always (clock.posedge,reset)
     def fifos():
          if reset==False:
             #print b,o_data,control_t,control_s
-            counter_tw.next=counter_pin+13
+            
             for i in range(len(fifo1)):
                 fifo1[i].next = a if i==0 else fifo1[i-1]
         
             for i in range(len(fifo2)):
                 fifo2[i].next = c if i==0 else fifo2[i-1]
-
+             
     @always_comb
     def out_twiddle():
         
+        counter_tw=mod(counter_pin+4,FFT)
         if (N!=1):
-            o_data.next=d*(e**complex(0,2*pi*index[counter_tw]/(1.0*FFT)))
+            o_data.next=d*conj(e**(complex(0,-2*pi*index[counter_tw]/(1.0*FFT))))
+
         else:
             o_data.next=d
+    @always (clock.negedge)
+    def print_values():
+        if (N!=1):
+            counter_tw=mod(counter_pin+4,FFT)
+            print N,counter_pin,counter_s,counter_t,i_data,b,d,index[counter_tw],'counter_tw: ',counter_tw
     return instances()
 
 
