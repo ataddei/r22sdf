@@ -34,8 +34,7 @@ class TestDefault(unittest.TestCase):
         for i in self.inputs:
             yield i
 
-    def runTest(self):
-        """Verifies butterfly r2^2 functional behavior as a serial FFT N=4"""
+    def runTest(self):        
         @always(delay(1))
         def clkgen():
             self.clock.next = not self.clock        
@@ -47,7 +46,6 @@ class TestDefault(unittest.TestCase):
                 yield delay(1)
             yield delay(1)
             self.reset.next=False
-            '''Driving stimulus in positive cycle and strobing in negative cycle to avoid race coinditions'''
             while True:                        
                 yield delay(1)
         @always(self.clock.posedge)
@@ -55,18 +53,17 @@ class TestDefault(unittest.TestCase):
             if (self.reset==False):
                 self.a.next= next(self.gg)
         @always(self.clock.negedge)
-        def strobe():
+        def fetch():
             if (self.reset==False):
                 self.collect.append(self.d.val)
         
                 
-        sim=Simulation(self.uut,clkgen,stimulus,stim,strobe)
+        sim=Simulation(self.uut,clkgen,stimulus,stim,fetch)
         for j in range(8*self.N):
             sim.run(1,quiet=1)
         self.check()
     def check(self):
-        '''Checks sorted values'''
-        
+        '''Checks sorted values'''        
         self.fft_reference = list(sort_complex(fft.fft(self.inputs[0:self.N])))
         self.fft_test      = list(sort_complex(self.collect[self.latency-1:self.latency-1+self.N]))
         self.fft_reference_r = [i.round(8) for i in self.fft_reference]

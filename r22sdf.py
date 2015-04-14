@@ -54,13 +54,13 @@ def stage(i_data,reset,clock,o_data,counter_pin,index,N=1,FFT=16):
     b=Signal(complex(0,0))
     c=Signal(complex(0,0))
     d=Signal(complex(0,0))
-    counter_s=Signal(False)
-    counter_t=Signal(False)
+    counter_s=Signal(0)
+    counter_t=Signal(0)
     #counter_tw=Signal(modbv(0,0,FFT))
     @always_comb
     def control_muxes():
-        counter_s.next=counter_pin(2*(N-1)+1)
-        counter_t.next=counter_pin(2*(N-1))
+        counter_s.next=counter_pin.next[2*(N-1)+1]
+        counter_t.next=counter_pin.next[2*(N-1)]
        
     u_bf22=Butterfly22(counter_s,counter_t,fifo2[len(fifo2)-1],b,c,d)
     u_bf21=Butterfly21(counter_s,fifo1[len(fifo1)-1],i_data,a,b)
@@ -81,13 +81,12 @@ def stage(i_data,reset,clock,o_data,counter_pin,index,N=1,FFT=16):
         
         counter_tw=mod(counter_pin+4,FFT)
         if (N!=1):
-            o_data.next=d*conj(e**(complex(0,-2*pi*index[counter_tw]/(1.0*FFT))))
-
+            o_data.next=d*(e**(complex(0,2*pi*index[counter_tw]/(1.0*FFT))))
         else:
             o_data.next=d
     @always (clock.negedge)
     def print_values():
-        if (N!=1):
+        if (N==1):
             counter_tw=mod(counter_pin+4,FFT)
             print N,counter_pin,counter_s,counter_t,i_data,b,d,index[counter_tw],'counter_tw: ',counter_tw
     return instances()
