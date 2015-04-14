@@ -40,8 +40,10 @@ class TestDefault(unittest.TestCase):
     def runTest(self):
         """Verifies butterfly r2^2 functional behavior as a serial FFT N=4"""
         global Ntest
+
         def _test():   
             uut = r22sdf_top(self.a,self.reset,self.clock,self.d,N=1)
+
             @always(delay(1))
             def clkgen():
                 self.clock.next = not self.clock        
@@ -67,17 +69,14 @@ class TestDefault(unittest.TestCase):
 
             return uut, clkgen, stimulus, stim, strobe
 
-        traceSignals.name = "test_r2sdf_{}".format(Ntest)  
+        traceSignals.name = "test_r22sdf_{}".format(Ntest)  
         trc = traceSignals(_test)
         sim=Simulation(trc)
         sim.run(8*self.N)
-        #for j in range(8*self.N):
-        #    sim.run(1,quiet=1)
         Ntest += 1
         # hack?? not sure why this lock exists or if it should
         myhdl._simulator._tracing = 0
         self.check()
-        #del(sim); del(trc)
 
     def check(self):
         '''Checks sorted values'''
