@@ -81,13 +81,13 @@ def stage(i_data,reset,clock,o_data,counter_pin,index,N=1,FFT=16):
         
         counter_tw=mod(counter_pin+4,FFT)
         if (N!=1):
-            o_data.next=d*conj(e**(complex(0,2*pi*index[counter_tw]/(1.0*FFT))))
+            o_data.next=d*(e**(complex(0,-2*pi*index[counter_tw]/(1.0*FFT))))
         else:
             o_data.next=d
     @always (clock.negedge)
     def print_values():
         if (N==1):
-            counter_tw=mod(counter_pin+4,FFT)
+            counter_tw=mod(counter_pin+6,FFT)
             #print N,counter_pin,counter_s,counter_t,i_data,b,d,index[counter_tw],'counter_tw: ',counter_tw
     return instances()
 

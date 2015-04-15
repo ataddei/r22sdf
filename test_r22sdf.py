@@ -81,10 +81,13 @@ class TestDefault(unittest.TestCase):
 
     def check(self):
         '''Checks sorted values'''
+        r''' Implement a sorting function of R2^2SDF'''
         self.fft_reference = list(sort_complex(fft.fft(self.inputs[0:self.N])))
         self.fft_test      = list(sort_complex(self.collect[self.latency-1:self.latency-1+self.N]))
         self.fft_reference_r = [i.round(8) for i in self.fft_reference]
         self.fft_test_r      = [i.round(8) for i in self.fft_test]
+        #print self.fft_reference_r
+        #print self.fft_test_r
         self.assertListEqual(self.fft_reference_r,self.fft_test_r)
 
 class TestDefaultRandomReal(TestDefault):
