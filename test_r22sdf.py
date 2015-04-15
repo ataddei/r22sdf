@@ -13,6 +13,7 @@ class TestDefault(unittest.TestCase):
 
     def setUp(self):
         self.N=4
+        self.n_bf=1
         self.latency=self.N-1
         self.collect=[]
         self.a=Signal(complex(0,0))
@@ -43,7 +44,7 @@ class TestDefault(unittest.TestCase):
 
         def _test():   
             #self.uut = r22sdf_top(self.a,self.reset,self.clock,self.d,N=1)
-            uut = self.uut
+            uut = r22sdf_top(self.a,self.reset,self.clock,self.d,N=self.n_bf)
             @always(delay(1))
             def clkgen():
                 self.clock.next = not self.clock        
@@ -126,6 +127,7 @@ class TestDefaultImpulse3(TestDefault):
 class TestDefaultFFT (TestDefault):
     def setUp(self):
         self.N=16
+        self.n_bf=2
         self.latency=self.N-1
         self.collect=[]
         self.a=Signal(complex(0,0))
@@ -204,6 +206,7 @@ class TestDefaultFFTSaw(TestDefaultFFT):
 class TestDefaultFFTRandomImpulseSweep(TestDefaultFFTImpulseRandom):
     def setUp(self,idx=0):
         self.N=16
+        self.n_bf=2
         self.latency=self.N-1
         self.collect=[]
         self.a=Signal(complex(0,0))
