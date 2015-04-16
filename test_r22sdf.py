@@ -39,7 +39,7 @@ class TestDefault(unittest.TestCase):
             yield i
 
     def runTest(self):
-        """Verifies butterfly r2^2 functional behavior as a serial FFT N=4"""
+        """Verifies butterfly r2^2 functional behavior as a serial FFT N={}""".format(self.N)
         global Ntest
 
         def _test():   
@@ -81,7 +81,6 @@ class TestDefault(unittest.TestCase):
 
     def check(self):
         '''Checks sorted values'''
-        r''' Implement a sorting function of R2^2SDF'''
         self.fft_reference = (fft.fft(self.inputs[0:self.N]))
         self.fft_test      = self.collect[self.latency-1:self.latency-1+self.N]
         self.fft_test_o = [ self.fft_test[i] for i in gen_bitreverse(int(log(self.N)/log(2)))]
