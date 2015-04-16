@@ -82,12 +82,11 @@ class TestDefault(unittest.TestCase):
     def check(self):
         '''Checks sorted values'''
         r''' Implement a sorting function of R2^2SDF'''
-        self.fft_reference = list(sort_complex(fft.fft(self.inputs[0:self.N])))
-        self.fft_test      = list(sort_complex(self.collect[self.latency-1:self.latency-1+self.N]))
-        self.fft_reference_r = [i.round(8) for i in self.fft_reference]
-        self.fft_test_r      = [i.round(8) for i in self.fft_test]
-        #print self.fft_reference_r
-        #print self.fft_test_r
+        self.fft_reference = (fft.fft(self.inputs[0:self.N]))
+        self.fft_test      = self.collect[self.latency-1:self.latency-1+self.N]
+        self.fft_test_o = [ self.fft_test[i] for i in gen_bitreverse(int(log(self.N)/log(2)))]
+        self.fft_reference_r = [complex128(i).round(8) for i in self.fft_reference]
+        self.fft_test_r      = [complex128(i).round(8) for i in self.fft_test_o]
         self.assertListEqual(self.fft_reference_r,self.fft_test_r)
 
 class TestDefaultRandomReal(TestDefault):
@@ -189,9 +188,7 @@ class TestDefaultFFTImpulse3(TestDefaultFFT):
 class TestDefaultFFTImpulseRandom(TestDefaultFFT):
     def input_generator(self):
         imp=[randint(0,self.N-1), randint(0,self.N-1) ]
-        imp=[3,4]
-        print imp
-        self.inputs=[complex(1,0) if i in imp else complex(0,0) for i in range(self.N)]*2
+        self.inputs=[complex128(complex(1,0)) if i in imp else complex(0,0) for i in range(self.N)]*2
         for i in self.inputs:
             yield i
 class TestDefaultFFTRandom(TestDefaultFFT):
@@ -253,6 +250,13 @@ FFT16Suite.addTest(unittest.makeSuite(TestDefaultFFTImpulse3))
 FFT16Suite.addTest(unittest.makeSuite(TestDefaultFFTImpulseRandom))
 FFT16Suite.addTest(unittest.makeSuite(TestDefaultFFTRandom))
 FFT16Suite.addTest(unittest.makeSuite(TestDefaultFFTZero))
+
+def gen_bitreverse(N=4):
+    a=array([0])
+    for i in range(N):
+        a=array(list(a*2)*2)+array([0]*len(a)+[1]*len(a))
+    return list(a)
+
 if __name__ == '__main__':
     unittest.main()
 
