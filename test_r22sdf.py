@@ -279,6 +279,89 @@ class TestDefaultFFT64 (TestDefaultFFTImpulse0):
 
 
 
+class TestDefaultFFT64Zero(TestDefaultFFT64):
+    def input_generator(self):
+        self.inputs=[complex(0,0) for i in range(self.N)]*2
+        for i in self.inputs:
+            yield i
+class TestDefaultFFT64Impulse0(TestDefaultFFT64):
+    def input_generator(self):
+        self.inputs=[(complex(random(),random())) if i==0 else complex(0,0) for i in range(self.N)]*2
+        for i in self.inputs:
+            yield i
+
+class TestDefaultFFT64Impulse1(TestDefaultFFT64):
+    def input_generator(self):
+        self.inputs=[complex(random(),random()) if i==1 else complex(0,0) for i in range(self.N)]*2
+        for i in self.inputs:
+            yield i
+class TestDefaultFFT64Impulse2(TestDefaultFFT64):
+    def input_generator(self):
+        self.inputs=[complex(1,0) if i==2 else complex(0,0) for i in range(self.N)]*2
+        for i in self.inputs:
+            yield i
+class TestDefaultFFT64Impulse3(TestDefaultFFT64):
+    def input_generator(self):
+        self.inputs=[complex(random(),0) if i==3 else complex(0,0) for i in range(self.N)]*2
+        for i in self.inputs:
+            yield i
+class TestDefaultFFT64Impulse3(TestDefaultFFT64):
+    def input_generator(self):
+        self.inputs=[complex(random(),0) if i==3 else complex(0,0) for i in range(self.N)]*2
+        for i in self.inputs:
+            yield i
+class TestDefaultFFT64ImpulseRandom(TestDefaultFFT64):
+    def input_generator(self):
+        imp=[randint(0,self.N-1), randint(0,self.N-1) ]
+        self.inputs=[complex128(complex(1,0)) if i in imp else complex(0,0) for i in range(self.N)]*2
+        for i in self.inputs:
+            yield i
+class TestDefaultFFT64Random(TestDefaultFFT64):
+    def input_generator(self):
+        self.inputs=[complex128(complex(round(random()-0.5,5),round(random()-0.5,5))).round(8) for i in range(self.N)]*2
+        for i in self.inputs:
+            yield i
+
+class TestDefaultFFT64Saw(TestDefaultFFT64):
+    def input_generator(self):
+        self.inputs=[complex128(complex(i,i)).round(8) for i in range(self.N)]*2
+        for i in self.inputs:
+            yield i
+
+class TestDefaultFFT64RandomImpulseSweep(TestDefaultFFT64ImpulseRandom):
+    def setUp(self,idx=0):
+        self.N=16
+        self.n_bf=2
+        self.latency=self.N-1
+        self.collect=[]
+        self.a=Signal(complex(0,0))
+        self.d=Signal(complex(0,0))
+        self.reset=ResetSignal(1,1,False)
+        self.clock = Signal(bool(0))
+        self.uut = r22sdf_top(self.a,self.reset,self.clock,self.d,N=2)
+        self.idx=idx
+        self.inputs=[complex(1,0) if i == idx else complex(0,0) for i in range(self.N)]*2
+        self.gg=self.input_generator()
+
+    def input_generator(self):        
+        for i in self.inputs:
+            yield i
+    def runTest(self):
+        self.setUp()
+        self.count=[]
+        for i in range(16):
+            try:
+                self.setUp(i)
+                super(TestDefaultFFT64RandomImpulseSweep,self).runTest()
+                self.tearDown()
+            except Exception as e:
+                #print e,"Exception Failed in: ",self.idx
+                self.count.append(i)
+        if len(self.count)>0:
+            print "Failing impulses: ",self.count
+            raise self.failureException
+
+
 def gen_bitreverse(N=4):
     a=array([0])
     for i in range(N):
