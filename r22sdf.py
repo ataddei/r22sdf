@@ -48,8 +48,8 @@ def Butterfly22 (i_control_t,i_control_s,i_data_aa,i_data_bb,o_data_aa,o_data_bb
 
 
 def stage(i_data,reset,clock,o_data,counter_pin,index,N=1,FFT=16):
-    fifo1=[Signal(complex(0,0)) for ii in range(N*(2**N))]
-    fifo2=[Signal(complex(0,0)) for ii in range(N*(2**(N-1)))]
+    fifo1=[Signal(complex(0,0)) for ii in range(int(2**(2*N-1)))]
+    fifo2=[Signal(complex(0,0)) for ii in range(int(2**(2*N-2)))]
     a=Signal(complex(0,0))
     b=Signal(complex(0,0))
     c=Signal(complex(0,0))
@@ -79,7 +79,7 @@ def stage(i_data,reset,clock,o_data,counter_pin,index,N=1,FFT=16):
     @always_comb
     def out_twiddle():
         
-        counter_tw=mod(counter_pin+4,FFT)
+        counter_tw=mod(counter_pin+(2**(2*(N-1))),FFT)
         if (N!=1):
             o_data.next=d*(e**(complex(0,-2*pi*index[counter_tw]/(1.0*FFT))))
         else:
@@ -140,3 +140,4 @@ def twiddle_calc(N=16):
     return t if k else [0]*N
 
 p=twiddle_calc(16)
+p=twiddle_calc(64)

@@ -73,7 +73,7 @@ class TestDefault(unittest.TestCase):
         traceSignals.name = "test_r22sdf_{}".format(Ntest)  
         trc = traceSignals(_test)
         sim=Simulation(trc)
-        sim.run(8*self.N)
+        sim.run(self.N**2)
         Ntest += 1
         # hack?? not sure why this lock exists or if it should
         myhdl._simulator._tracing = 0
@@ -249,6 +249,35 @@ FFT16Suite.addTest(unittest.makeSuite(TestDefaultFFTImpulse3))
 FFT16Suite.addTest(unittest.makeSuite(TestDefaultFFTImpulseRandom))
 FFT16Suite.addTest(unittest.makeSuite(TestDefaultFFTRandom))
 FFT16Suite.addTest(unittest.makeSuite(TestDefaultFFTZero))
+
+class TestDefaultFFT64 (TestDefaultFFTImpulse0):
+    def setUp(self):
+        self.N=64
+        self.n_bf=3
+        self.latency=self.N-1
+        self.collect=[]
+        self.a=Signal(complex(0,0))
+        self.d=Signal(complex(0,0))
+        self.reset=ResetSignal(1,1,False)
+        self.clock = Signal(bool(0))
+        self.uut = r22sdf_top(self.a,self.reset,self.clock,self.d,N=3)
+        self.gg=self.input_generator()
+    def tearDown(self):
+        self.N       =[]
+        self.latency =[]
+        self.collect =[]
+        self.a       =[]
+        self.d       =[]
+        self.reset   =[]
+        self.clock   =[]
+        self.uut     =[]
+        self.gg      =[]
+    ## def input_generator(self):
+    ##     self.inputs=[complex(1,0) for i in range(self.N)]*4
+    ##     for i in self.inputs:
+    ##         yield i
+
+
 
 def gen_bitreverse(N=4):
     a=array([0])
