@@ -12,12 +12,12 @@ DIN_WDTH  = 8
 META_WDTH = 1
 DOUT_WDTH = 11 
 
-impulse=Signal(intbv(2**DIN_WDTH-1)[DIN_WDTH:])
-zero=Signal(intbv(0)[DIN_WDTH:])
+impulse=(2**DIN_WDTH-1)
+zero=0
 stim=[ [impulse]*2 if i==0 else [zero]*2 for i in range(2**N_LOG2) ]
 stim_re=tuple([i[0] for i in stim])
 stim_im=tuple([i[1] for i in stim])
-def tb(stim_re,stim_im):
+def tb():
     
    
     clk=Signal(bool(0))
@@ -51,13 +51,9 @@ def tb(stim_re,stim_im):
     def stim():
         if (rst_n==True):
             stim_counter.next=stim_counter+1
-            din_re.next[:]=stim_re[stim_counter][:]
-            din_im.next[:]=stim_im[stim_counter][:]
+            din_re.next[:]=stim_re[stim_counter]
+            din_im.next[:]=stim_im[stim_counter]
             print din_re,din_im
     return instances()
-a=tb(stim_re,stim_im)
-toVerilog(a)
 
-
-    
-    
+toVerilog(tb)
