@@ -20,7 +20,7 @@ stim_im=tuple([i[1] for i in stim])
 def tb():
     
    
-    clk=Signal(bool(0))
+    clk=Signal(bool(0),10)
     rst_n=Signal(bool(0))
     din_meta=Signal(intbv(0)[META_WDTH:])
     din_re=Signal(intbv(0)[ DIN_WDTH:])
@@ -33,27 +33,33 @@ def tb():
     stim_counter=Signal(modbv(0,0,N))
     
      
+    
     @instance
-    def clkgen():
+    def tbclk():
+        clk.next = False
         while True:
+            yield delay(3)
             clk.next = not clk
-            yield delay(1)
+    
+        
     @instance
     def stimulus():
+        
         rst_n.next = False
         for i in range(2**N_LOG2):
             yield delay(1)
-        yield delay(1)
+        yield clk.posedge
         rst_n.next=True
-        while True:                        
-            yield delay(1)
+
     @always(clk.posedge)
     def stim():
         if (rst_n==True):
             stim_counter.next=stim_counter+1
             din_re.next[:]=stim_re[stim_counter]
             din_im.next[:]=stim_im[stim_counter]
-            print din_re,din_im
+        else:
+            stim_counter.next=0
+            
     return instances()
 
 toVerilog(tb)
