@@ -138,6 +138,17 @@ def twiddle_calc(N=16):
             t.append(p)
     
     return t if k else [0]*N
+NB_TW=8
+FFT=16
+p=twiddle_calc(FFT)
+tw_fid=open('twiddles_r22sdf_{}.v'.format(FFT),'w')
+tw_fid.write('wire signed [NB_TW-1:0] twiddle_real [{}-1:0][{}-1:0];\n'.format(FFT,len(p)))
+tw_fid.write('wire signed [NB_TW-1:0] twiddle_imag [{}-1:0][{}-1:0];\n'.format(FFT,len(p)))
+for i in range(len(p)):
+    for j in range(len(p[i])):
+        var=(e**(complex(0,-2*pi*p[i][j]/(FFT))))
+        tw_fid.write( "assign twiddle_real[{}][{}]={};\n".format(j,i,int(real(var)*(2**NB_TW-1)/2)))
+        tw_fid.write( "assign twiddle_imag[{}][{}]={};\n".format(j,i,int(imag(var)*(2**NB_TW-1)/2)))
 
-p=twiddle_calc(16)
+tw_fid.close()
 p=twiddle_calc(64)
